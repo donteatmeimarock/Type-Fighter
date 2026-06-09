@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Type Fighter II: Turbo typing combat</title>
+  <meta name="description" content="A retro pixel-art typing combat game in the style of Street Fighter. Type fast to strike, charge your super, and KO your opponent.">
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts for retro arcade styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Retro Arcade Cabinet Border -->
+  <div class="arcade-cabinet">
+    <div class="arcade-marquee">
+      <h1 class="marquee-title">TYPE FIGHTER II</h1>
+      <span class="marquee-subtitle">TURBO EDITION</span>
+    </div>
+    
+    <div class="screen-bezel">
+      <!-- CRT Screen Wrapper with scanlines and curved effect -->
+      <div class="crt-screen">
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
+        
+        <!-- Game Viewport (16:9 Aspect Ratio) -->
+        <div id="game-viewport" class="game-viewport">
+          
+          <!-- TOP HUD: Health Bars, Names, Timer -->
+          <div class="hud-top">
+            <!-- Player Health & Info -->
+            <div class="player-hud hud-section">
+              <div class="hud-labels">
+                <span class="character-name">YOU</span>
+                <span class="score-display">000000</span>
+              </div>
+              <div class="health-bar-container player-health-container">
+                <div class="health-bar-bg"></div>
+                <div id="player-health-yellow" class="health-bar-yellow"></div>
+                <div id="player-health-fill" class="health-bar-fill"></div>
+              </div>
+            </div>
+            
+            <!-- Central Round Timer and Info -->
+            <div class="timer-hud">
+              <div class="round-indicator">RND <span id="current-round-num">1</span></div>
+              <div id="timer-display" class="timer-countdown">99</div>
+              <div class="round-wins">
+                <span id="player-wins" class="win-dots"></span>
+                <span id="enemy-wins" class="win-dots"></span>
+              </div>
+            </div>
+            
+            <!-- Enemy Health & Info -->
+            <div class="enemy-hud hud-section">
+              <div class="hud-labels">
+                <span class="score-display">000000</span>
+                <span class="character-name">SHADOW</span>
+              </div>
+              <div class="health-bar-container enemy-health-container">
+                <div class="health-bar-bg"></div>
+                <div id="enemy-health-yellow" class="health-bar-yellow"></div>
+                <div id="enemy-health-fill" class="health-bar-fill"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- MAIN ARENA CANVAS -->
+          <canvas id="game-canvas" width="960" height="420"></canvas>
+          
+          <!-- CENTER SCREEN ANNOUNCER (e.g. FIGHT!, KO!, ROUND 1) -->
+          <div id="announcer-banner" class="announcer-banner hidden"></div>
+          
+          <!-- SCREEN FLASH AND DAMAGE SHAKE FX OVERLAYS -->
+          <div id="hit-flash" class="hit-flash-overlay"></div>
+          
+          <!-- TYPING HUD & SUPER GAUGE (Glassmorphism Overlay at the bottom) -->
+          <div class="hud-bottom">
+            <!-- Super Meter -->
+            <div class="super-gauge-wrapper">
+              <div class="super-label">SUPER</div>
+              <div class="super-bar-container">
+                <div id="super-bar-fill" class="super-bar-fill"></div>
+                <div id="super-text" class="super-text-overlay">0%</div>
+              </div>
+            </div>
+            
+            <!-- Central Typing Target & Prompt -->
+            <div class="typing-center">
+              <div class="letter-display-wrapper">
+                <svg class="circular-timer" viewBox="0 0 100 100">
+                  <circle class="timer-track" cx="50" cy="50" r="45"></circle>
+                  <circle id="timer-progress" class="timer-progress" cx="50" cy="50" r="45" stroke-dasharray="283" stroke-dashoffset="0"></circle>
+                </svg>
+                <div id="target-letter" class="target-letter">A</div>
+              </div>
+              
+              <!-- Combo / Feedback text -->
+              <div class="feedback-area">
+                <div id="feedback-message" class="feedback-msg">TYPE KEY TO STRIKE!</div>
+                <div id="combo-display" class="combo-counter hidden">COMBO <span id="combo-count">0</span></div>
+              </div>
+            </div>
+            
+            <!-- Decorative controls helper -->
+            <div class="controls-helper">
+              <div class="super-hint hidden" id="super-prompt">PRESS [SPACE] FOR SUPER!</div>
+              <div class="audio-toggle-wrapper">
+                <button id="mute-btn" class="arcade-btn-mini">SOUND: ON</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- SCREEN MODALS (AESTHETIC) -->
+          <!-- 1. Start / Selection Screen -->
+          <div id="start-screen" class="screen-modal active">
+            <h2 class="arcade-title pulse">INSERT COIN</h2>
+            <p class="arcade-prompt">PRESS ANY KEY TO PLAY</p>
+            
+            <!-- Character Selector Grid (Aesthetic) -->
+            <div class="char-select-section">
+              <p class="select-label">SELECT FIGHTER</p>
+              <div class="char-grid">
+                <div class="char-card active" data-char="ryu">
+                  <div class="char-portrait ryu-portrait"></div>
+                  <div class="char-name">YOU</div>
+                </div>
+                <div class="char-card disabled" data-char="shadow">
+                  <div class="char-portrait shadow-portrait"></div>
+                  <div class="char-name">SHADOW</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Difficulty Selection -->
+            <div class="difficulty-section">
+              <span class="difficulty-label">DIFFICULTY:</span>
+              <div class="difficulty-btns">
+                <button class="difficulty-btn active" data-diff="easy">EASY</button>
+                <button class="difficulty-btn" data-diff="medium">MEDIUM</button>
+                <button class="difficulty-btn" data-diff="hard">HARD</button>
+              </div>
+            </div>
+            <div class="high-scores">
+              <h3>TOP FIGHTERS</h3>
+              <div class="score-row"><span>1. TYP</span><span>99999</span></div>
+              <div class="score-row"><span>2. BOT</span><span>55000</span></div>
+            </div>
+          </div>
+          
+          <!-- 2. Game Over / Victory Screen -->
+          <div id="game-over-screen" class="screen-modal hidden">
+            <h2 id="game-over-title" class="arcade-title">VICTORY</h2>
+            <p id="game-over-reason" class="arcade-subtitle">YOU KO'D SHADOW!</p>
+            <div class="stats-box">
+              <div class="stat-line">ACCURACY: <span id="stat-accuracy">0%</span></div>
+              <div class="stat-line">MAX COMBO: <span id="stat-max-combo">0</span></div>
+              <div class="stat-line">KEYS/MIN: <span id="stat-kpm">0</span></div>
+            </div>
+            <p class="arcade-prompt pulse">PRESS ANY KEY TO PLAY AGAIN</p>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    
+    <!-- Cabinet Controls (Aesthetic Bottom) -->
+    <div class="arcade-controls-panel">
+      <div class="joysticks">
+        <div class="joystick-base"><div class="joystick-shaft"><div class="joystick-ball red"></div></div></div>
+        <div class="joystick-base"><div class="joystick-shaft"><div class="joystick-ball blue"></div></div></div>
+      </div>
+      <div class="arcade-buttons">
+        <div class="btn-group">
+          <div class="arc-btn red-btn"></div>
+          <div class="arc-btn yellow-btn"></div>
+          <div class="arc-btn blue-btn"></div>
+        </div>
+        <div class="btn-group">
+          <div class="arc-btn green-btn"></div>
+          <div class="arc-btn white-btn"></div>
+          <div class="arc-btn black-btn"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="game.js"></script>
+</body>
+</html>
